@@ -93,7 +93,7 @@ npx prisma generate
 5. Start the development servers
 ```bash
 # Start backend server (from server directory)
-npm run start:dev
+npm run dev
 
 # Start frontend dev server (from client directory)
 npm run dev
