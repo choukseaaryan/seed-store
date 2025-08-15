@@ -1,4 +1,4 @@
-import { IsString, IsInt, IsBoolean, IsOptional } from 'class-validator';
+import { IsString, IsInt, IsBoolean, IsOptional, IsDecimal } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateProductDto {
@@ -22,6 +22,10 @@ export class CreateProductDto {
   @IsOptional()
   @IsString()
   technicalName?: string;
+
+  @ApiProperty({ description: 'Product price' })
+  @IsDecimal()
+  price: number;
 
   @ApiProperty({ description: 'Current stock quantity' })
   @IsInt()

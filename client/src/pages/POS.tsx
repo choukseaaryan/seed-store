@@ -54,7 +54,7 @@ export default function POS() {
   };
 
   const filteredProducts = products?.filter((product: Product) =>
-    product.name.toLowerCase().includes(search.toLowerCase())
+    product.name?.toLowerCase().includes(search.toLowerCase())
   );
 
   const total = cart.reduce(

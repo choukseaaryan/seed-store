@@ -3,6 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
 import { LoadingSpinner } from './components/ui';
 import ProtectedRoute from './components/ProtectedRoute';
+import ProductCategory from './pages/ProductCategory';
+import Products from './pages/Products';
 
 // Lazy loaded components
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -37,6 +39,16 @@ function App() {
         <Route path="/inventory" element={
           <Suspense fallback={<LoadingSpinner />}>
             <Inventory />
+          </Suspense>
+        } />
+        <Route path="/product-category" element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <ProductCategory />
+          </Suspense>
+        } />
+        <Route path="/products" element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <Products />
           </Suspense>
         } />
         <Route path="*" element={<Navigate to="/" replace />} />

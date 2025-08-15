@@ -6,6 +6,8 @@ import { initDB } from './utils/db'
 import { AuthProvider } from './context/AuthContext'
 import './index.css'
 import App from './App.tsx'
+import { ErrorBoundary } from './components/ErrorBoundary.tsx'
+import { Toaster } from 'react-hot-toast'
 
 // Initialize IndexedDB
 initDB().catch(console.error);
@@ -21,13 +23,16 @@ const queryClient = new QueryClient({
 });
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
-  </StrictMode>,
+  <ErrorBoundary>
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <AuthProvider>
+            <Toaster position='top-right'/>
+            <App />
+          </AuthProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </StrictMode>
+  </ErrorBoundary>
 )

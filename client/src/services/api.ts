@@ -1,6 +1,7 @@
 import axios from 'axios';
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import type { ApiError } from '../types/api';
+import toast from 'react-hot-toast';
 
 // Create axios instance
 const api = axios.create({
@@ -35,6 +36,10 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
+    // Show success toast if request is not a GET
+    if (response.config.method !== 'get') {
+      toast.success('Request successful');
+    }
     return response;
   },
   (error: AxiosError<ApiError>) => {
@@ -46,8 +51,10 @@ api.interceptors.response.use(
       });
     }
 
+    // Show toasts based on error
     switch (error.response.status) {
       case 401:
+        toast.error('Unauthorized - please log in again');
         // Unauthorized - redirect to login if not at login page
         if (window.location.pathname !== '/login') {
           window.location.href = '/login';
@@ -56,18 +63,22 @@ api.interceptors.response.use(
       
       case 403:
         // Forbidden - user doesn't have necessary permissions
+        toast.error('Forbidden - you do not have permission to access this resource');
         break;
       
       case 404:
         // Not found
+        toast.error('Not found - the requested resource could not be found');
         break;
       
       case 422:
         // Validation error
+        toast.error('Validation error - please check your input');
         break;
       
       case 429:
         // Too many requests
+        toast.error('Too many requests - please try again later');
         break;
       
       case 500:
@@ -75,6 +86,7 @@ api.interceptors.response.use(
       case 502:
       case 503:
         // Server errors
+        toast.error('Server error - please try again later');
         break;
     }
 

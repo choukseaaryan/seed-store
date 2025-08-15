@@ -33,7 +33,7 @@ export default function Button({
       type="button"
       disabled={disabled || isLoading}
       className={classNames(
-        'font-semibold shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
+        'font-semibold shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
         'disabled:opacity-50 disabled:cursor-not-allowed',
         variantStyles[variant],
         sizeStyles[size],

@@ -15,6 +15,7 @@ import { classNames } from '../../utils/helpers'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: HomeIcon },
+  { name: 'Product Category', href: '/product-category', icon: ClipboardDocumentListIcon },
   { name: 'Products', href: '/products', icon: ClipboardDocumentListIcon },
   { name: 'Customers', href: '/customers', icon: UsersIcon },
   { name: 'Bills', href: '/bills', icon: CurrencyRupeeIcon },
@@ -205,7 +206,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     <UserIcon className="h-5 w-5 text-gray-600" />
                   </div>
                   <span className="hidden lg:flex lg:items-center">
-                    <span className="ml-4 text-sm font-semibold leading-6 text-gray-900" aria-hidden="true">
+                    <span className="ml-4 text-sm font-semibold leading-6 text-white" aria-hidden="true">
                       Admin
                     </span>
                   </span>
@@ -242,7 +243,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        <main className="py-10">
+        <main className="py-10 min-h-[calc(100vh-4rem)] min-w-screen lg:min-w-[calc(100vw-18rem)]">
           <div className="px-4 sm:px-6 lg:px-8">
             {children}
           </div>
