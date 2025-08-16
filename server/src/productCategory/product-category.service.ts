@@ -8,6 +8,10 @@ export class ProductCategoryService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(data: CreateProductCategoryDto) {
+    // Check if category already exists
+    const existingCategory = await this.prisma.productCategory.findFirst({ where: { name: data.name } });
+    if (existingCategory) throw new Error('Product category already exists');
+
     return this.prisma.productCategory.create({ data });
   }
 

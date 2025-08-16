@@ -20,6 +20,7 @@ async function main() {
       itemName: 'Wheat Seeds',
       technicalName: 'Triticum aestivum',
       stockQty: 1000,
+      price: 100.00,
       subItemContainer: false
     }
   });
@@ -31,6 +32,7 @@ async function main() {
       itemName: 'Urea',
       technicalName: 'Carbamide',
       stockQty: 500,
+      price: 50.00,
       subItemContainer: false
     }
   });
@@ -77,8 +79,8 @@ async function main() {
           {
             productId: urea.id,
             quantity: 2,
-            price: 100.00,
-            total: 200.00
+            price: 50.00,
+            total: 100.00
           }
         ]
       }

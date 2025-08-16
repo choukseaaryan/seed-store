@@ -51,8 +51,12 @@ api.interceptors.response.use(
       });
     }
 
+    const message = error.response.data?.message;
     // Show toasts based on error
     switch (error.response.status) {
+      case 400:
+        toast.error(message ? message : 'Bad request - please check your input');
+        break;
       case 401:
         toast.error('Unauthorized - please log in again');
         // Unauthorized - redirect to login if not at login page

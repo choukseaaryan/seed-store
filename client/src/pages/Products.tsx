@@ -1,72 +1,75 @@
 import React, { useEffect, useState } from "react";
-import { TextField, Button, Box } from "@mui/material";
+import { Button, Box } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import api from "../services/api";
-import toast from "react-hot-toast";
+import AddProductModal from "../components/AddProductModal";
 
 const Products : React.FC = () => {
-  const [categoryName, setCategoryName] = useState("");
-  const [categories, setCategories] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Function to fetch categories
-  const fetchCategories = async () => {
+  // Function to fetch products
+  const fetchProducts = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/product-categories");
-      setCategories(response.data);
+      const response = await api.get("/products");
+      console.log(response.data);
+      setProducts(response.data);
     } catch (error) {
-      console.error("Error fetching categories:", error);
+      console.error("Error fetching products:", error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchCategories();
+    fetchProducts();
   }, []);
 
-  const handleAddCategory = async () => {
-    if (!categoryName.trim()) {
-      // Show error if category name is empty
-      toast.error("Category name cannot be empty!");
-      return;
-    }
-
-    const response = await api.post("/product-categories", { name: categoryName });
-    if (response.status === 201) {
-      // Category added successfully
-      setCategoryName("");
-      fetchCategories();
-    }
-  };
-
-  const handleEditCategory = async (id: string) => {
-    const newName = prompt("Enter new category name:");
-    if (!newName?.trim()) return;
-
-    const response = await api.patch(`/product-categories/${id}`, { name: newName });
-    if (response.status === 200) {
-      fetchCategories();
-    }
-  };
-
-  const handleDeleteCategory = async (id: string) => {
+  const handleDeleteProduct = async (id: string) => {
     const confirmed = window.confirm("Are you sure you want to delete this category?");
     if (!confirmed) return;
 
-    const response = await api.delete(`/product-categories/${id}`);
+    const response = await api.delete(`/products/${id}`);
     if (response.status === 200) {
-      fetchCategories();
+      fetchProducts();
     }
   };
 
   const columns: GridColDef[] = [
     {
-      field: "name",
-      headerName: "Category Name",
+      field: "itemName",
+      headerName: "Item Name",
       flex: 1,
-      maxWidth: 800,
+    },
+    {
+      field: "itemCode",
+      headerName: "Item Code",
+      flex: 1,
+    },
+    {
+      field: "companyName",
+      headerName: "Company Name",
+      flex: 1,
+    },
+    {
+      field: "price",
+      headerName: "Price",
+      flex: 1,
+    },
+    {
+      field: "stockQty",
+      headerName: "Stock",
+      flex: 1,
+    },
+    {
+      field: "category",
+      headerName: "Category",
+      flex: 1,
+      renderCell: (params: any) => (
+        <span>{params.row.category.name}</span>
+      )
     },
     {
       field: "actions",
@@ -75,42 +78,23 @@ const Products : React.FC = () => {
       flex: 1,
       maxWidth: 250,
       renderCell: (params: any) => (
-        <Box display="flex" gap={1} my={0.5}>
-          <Button
-            variant="outlined"
-            onClick={() => handleEditCategory(params.row.id)}
-          >
-            Edit
-          </Button>
-          <Button
-            variant="outlined"
-            color="error"
-            onClick={() => handleDeleteCategory(params.row.id)}
-          >
-            Delete
-          </Button>
-        </Box>
+        <Button
+          variant="outlined"
+          color="error"
+          onClick={() => handleDeleteProduct(params.row.id)}
+        >
+          Delete
+        </Button>
       ),
     },
   ];
 
   return (
     <>
-      <p className="text-2xl font-bold mb-8">Product Categories</p>
-      <Box className="flex">
-        <TextField
-          size="small"
-          label="Category Name"
-          placeholder="Enter category name"
-          value={categoryName}
-          onChange={(e) => setCategoryName(e.target.value)}
-        />
-        <Button
-          variant="contained"
-          onClick={handleAddCategory}
-          style={{ marginLeft: 12 }}
-        >
-          Add Category
+      <Box display={"flex"} justifyContent={"space-between"} alignItems={"center"} mb={4}>
+        <p className="text-2xl font-bold">Products</p>
+        <Button variant="contained" onClick={() => setIsOpen(true)}>
+          Add Product
         </Button>
       </Box>
       <Box
@@ -119,9 +103,9 @@ const Products : React.FC = () => {
         {/* Render existing categories in a table along with a delete and edit button */}
         <DataGrid
           loading={loading}
-          rows={categories}
+          rows={products}
           columns={columns}
-          label="Existing Categories"
+          label="Existing Products"
           disableRowSelectionOnClick
           showToolbar
           sx={{
@@ -131,6 +115,13 @@ const Products : React.FC = () => {
           }}
         />
       </Box>
+
+      {/* Add Product Modal */}
+      <AddProductModal
+        open={isOpen}
+        onClose={() => setIsOpen(false)}
+        onSuccess={fetchProducts}
+      />
     </>
   );
 };
