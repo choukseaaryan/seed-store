@@ -10,7 +10,8 @@ import {
   FormControlLabel,
   Checkbox,
 } from "@mui/material";
-import api from "../services/api";
+import { productCategoryService, productService } from "../services";
+import type { ProductCategory } from "../types/models";
 
 interface AddProductModalProps {
   open: boolean;
@@ -19,7 +20,7 @@ interface AddProductModalProps {
 }
 
 const AddProductModal: React.FC<AddProductModalProps> = ({ open, onClose, onSuccess }) => {
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [form, setForm] = useState({
     categoryId: "",
     companyName: "",
@@ -34,7 +35,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ open, onClose, onSucc
   // Fetch categories for dropdown
   useEffect(() => {
     if (open) {
-      api.get("/product-categories").then((res) => setCategories(res.data));
+      productCategoryService.getAll().then((res) => setCategories(res.data.data));
     }
   }, [open]);
 
@@ -48,7 +49,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ open, onClose, onSucc
 
   const handleSubmit = async () => {
     try {
-      await api.post("/products", {
+      await productService.create({
         ...form,
         price: form.price,
         stockQty: parseInt(form.stockQty, 10),

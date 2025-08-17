@@ -17,6 +17,7 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: HomeIcon },
   { name: 'Product Category', href: '/product-category', icon: ClipboardDocumentListIcon },
   { name: 'Products', href: '/products', icon: ClipboardDocumentListIcon },
+  { name: 'POS', href: '/pos', icon: CurrencyRupeeIcon },
   { name: 'Customers', href: '/customers', icon: UsersIcon },
   { name: 'Bills', href: '/bills', icon: CurrencyRupeeIcon },
   { name: 'Suppliers', href: '/suppliers', icon: TruckIcon },

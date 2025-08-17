@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { ProductCategoryService } from './product-category.service';
 import { CreateProductCategoryDto } from './dto/create-product-category.dto';
 import { UpdateProductCategoryDto } from './dto/update-product-category.dto';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
+import { PaginationQueryDto } from '../common/dto';
 
 @ApiTags('Product Categories')
 @Controller('product-categories')
@@ -15,8 +16,8 @@ export class ProductCategoryController {
   }
 
   @Get()
-  findAll() {
-    return this.productCategoryService.findAll();
+  findAll(@Query() query: PaginationQueryDto) {
+    return this.productCategoryService.findAll(query);
   }
 
   @Get(':id')

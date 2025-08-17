@@ -1,30 +1,24 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { LoadingSpinner, Button, Input, EmptyState } from '../components/ui';
-import api from '../services/api';
+import { productService } from '../services';
+import type { Product } from '../types/models';
 
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  stock: number;
-  category: string;
-}
-
+// This is not used anywhere. Product page is used instead
 export default function Inventory() {
   const [search, setSearch] = useState('');
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
-      const { data } = await api.get('/products');
-      return data;
+      const response = await productService.getAll();
+      return response.data.data;
     },
   });
 
   const filteredProducts = products?.filter((product: Product) =>
-    product.name.toLowerCase().includes(search.toLowerCase()) ||
-    product.category.toLowerCase().includes(search.toLowerCase())
+    product.itemName?.toLowerCase().includes(search.toLowerCase()) ||
+    product.category?.name?.toLowerCase().includes(search.toLowerCase())
   );
 
   if (isLoading) {
@@ -47,7 +41,7 @@ export default function Inventory() {
         />
       </div>
 
-      {filteredProducts?.length > 0 ? (
+      {filteredProducts?.length ?? 0 ? (
         <div className="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-lg">
           <table className="min-w-full divide-y divide-gray-300">
             <thead>
@@ -70,19 +64,19 @@ export default function Inventory() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredProducts.map((product: Product) => (
+              {filteredProducts?.map((product: Product) => (
                 <tr key={product.id}>
                   <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
-                    {product.name}
+                    {product.itemName}
                   </td>
                   <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                    {product.category}
+                    {product.category?.name}
                   </td>
                   <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                     ₹{product.price}
                   </td>
                   <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                    {product.stock}
+                    {product.stockQty}
                   </td>
                   <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium">
                     <Button size="sm" variant="secondary">

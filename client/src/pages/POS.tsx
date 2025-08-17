@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { LoadingSpinner, Button, Input } from '../components/ui';
-import api from '../services/api';
+import { productService } from '../services';
 
 interface Product {
   id: string;
@@ -21,8 +21,8 @@ export default function POS() {
   const { data: products, isLoading } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
-      const { data } = await api.get('/products');
-      return data;
+      const response = await productService.getAll();
+      return response.data.data;
     },
   });
 

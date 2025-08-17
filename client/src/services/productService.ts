@@ -1,6 +1,6 @@
 import { createCrudService } from './crudService';
 import type { Product } from '../types/models';
-import type { ApiResponse, PaginatedResponse } from '../types/api';
+import type { ApiResponse, PaginatedResponse, QueryParams } from '../types/api';
 import api from './api';
 
 const baseService = createCrudService<Product>('products');
@@ -11,9 +11,9 @@ export const productService = {
   updateStock: (id: string, quantity: number) => 
     api.patch<ApiResponse<Product>>(`/products/${id}/stock`, { quantity }),
   
-  getByCategory: (categoryId: string) => 
-    api.get<PaginatedResponse<Product>>(`/products/category/${categoryId}`),
+  getByCategory: (categoryId: string, params?: QueryParams) => 
+    api.get<PaginatedResponse<Product>>(`/products/category/${categoryId}`, { params }),
   
-  getLowStock: () => 
-    api.get<PaginatedResponse<Product>>('/products/low-stock'),
+  getLowStock: (params?: QueryParams) => 
+    api.get<PaginatedResponse<Product>>('/products/low-stock', { params }),
 };

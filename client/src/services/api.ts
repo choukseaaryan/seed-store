@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 
 // Create axios instance
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -58,7 +58,7 @@ api.interceptors.response.use(
         toast.error(message ? message : 'Bad request - please check your input');
         break;
       case 401:
-        toast.error('Unauthorized - please log in again');
+        toast.error(message ? message : 'Unauthorized - please log in again');
         // Unauthorized - redirect to login if not at login page
         if (window.location.pathname !== '/login') {
           window.location.href = '/login';

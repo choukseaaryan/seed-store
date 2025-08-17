@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { PaginationQueryDto } from '../common/dto';
 
 @ApiTags('Products')
 @Controller('products')
@@ -15,8 +16,8 @@ export class ProductController {
   }
 
   @Get()
-  findAll() {
-    return this.productService.findAll();
+  findAll(@Query() query: PaginationQueryDto) {
+    return this.productService.findAll(query);
   }
 
   @Get(':id')
@@ -32,5 +33,26 @@ export class ProductController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.productService.remove(id);
+  }
+
+  @Get('category/:categoryId')
+  findByCategory(
+    @Param('categoryId') categoryId: string,
+    @Query() query: PaginationQueryDto
+  ) {
+    return this.productService.findByCategory(categoryId, query);
+  }
+
+  @Get('low-stock')
+  findLowStock(@Query() query: PaginationQueryDto) {
+    return this.productService.findLowStock(query);
+  }
+
+  @Patch(':id/stock')
+  updateStock(
+    @Param('id') id: string,
+    @Body() body: { quantity: number }
+  ) {
+    return this.productService.updateStock(id, body.quantity);
   }
 }

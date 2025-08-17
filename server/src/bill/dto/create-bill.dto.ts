@@ -2,7 +2,7 @@ import { IsString, IsNumber, IsOptional, IsArray, ValidateNested } from 'class-v
 import { Type } from 'class-transformer';
 import { CreateBillItemDto } from '../../billItem/dto/create-bill-item.dto';
 
-export type PaymentMethod = 'CASH' | 'CARD' | 'UPI';
+export type PaymentMethod = 'CASH' | 'CREDIT';
 export type SaleStatus = 'PAID' | 'VOID' | 'REFUND';
 export type SyncStatus = 'PENDING' | 'SUCCESS' | 'FAILED';
 

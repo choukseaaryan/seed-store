@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { BillService } from './bill.service';
 import { CreateBillDto } from './dto/create-bill.dto';
 import { UpdateBillDto } from './dto/update-bill.dto';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { PaginationQueryDto } from '../common/dto';
 
 @ApiTags('Bills')
 @Controller('bills')
@@ -15,8 +16,8 @@ export class BillController {
   }
 
   @Get()
-  findAll() {
-    return this.billService.findAll();
+  findAll(@Query() query: PaginationQueryDto) {
+    return this.billService.findAll(query);
   }
 
   @Get(':id')

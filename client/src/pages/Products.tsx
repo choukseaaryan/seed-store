@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Button, Box } from "@mui/material";
-import { DataGrid, type GridColDef } from "@mui/x-data-grid";
-import api from "../services/api";
+import { DataGrid, type GridColDef, type GridRenderCellParams } from "@mui/x-data-grid";
+import { productService } from "../services/productService";
 import AddProductModal from "../components/AddProductModal";
+import type { Product } from "../types/models";
 
 const Products : React.FC = () => {
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -13,9 +14,9 @@ const Products : React.FC = () => {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/products");
-      console.log(response.data);
-      setProducts(response.data);
+      productService.getAll().then(response => {
+      setProducts(response.data.data);
+      });
     } catch (error) {
       console.error("Error fetching products:", error);
     } finally {
@@ -28,10 +29,10 @@ const Products : React.FC = () => {
   }, []);
 
   const handleDeleteProduct = async (id: string) => {
-    const confirmed = window.confirm("Are you sure you want to delete this category?");
+    const confirmed = window.confirm("Are you sure you want to delete this product?");
     if (!confirmed) return;
 
-    const response = await api.delete(`/products/${id}`);
+    const response = await productService.delete(id);
     if (response.status === 200) {
       fetchProducts();
     }
@@ -67,7 +68,7 @@ const Products : React.FC = () => {
       field: "category",
       headerName: "Category",
       flex: 1,
-      renderCell: (params: any) => (
+      renderCell: (params: GridRenderCellParams) => (
         <span>{params.row.category.name}</span>
       )
     },
@@ -77,7 +78,7 @@ const Products : React.FC = () => {
       type: "actions",
       flex: 1,
       maxWidth: 250,
-      renderCell: (params: any) => (
+      renderCell: (params: GridRenderCellParams) => (
         <Button
           variant="outlined"
           color="error"
@@ -100,7 +101,7 @@ const Products : React.FC = () => {
       <Box
         mt={4}
       >
-        {/* Render existing categories in a table along with a delete and edit button */}
+        {/* Render existing products in a table along with a delete and edit button */}
         <DataGrid
           loading={loading}
           rows={products}

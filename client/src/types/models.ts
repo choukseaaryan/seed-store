@@ -13,6 +13,7 @@ export interface Product {
   companyName: string;
   itemCode: string;
   itemName: string;
+  price: number;
   technicalName?: string;
   stockQty: number;
   subItemContainer: boolean;
@@ -29,7 +30,7 @@ export interface Bill {
   date: string;
   customerId?: string;
   customer?: Customer;
-  paymentMethod: 'CASH' | 'CARD' | 'UPI';
+  paymentMethod: 'CASH' | 'CREDIT';
   saleStatus: 'PAID' | 'VOID' | 'REFUND';
   syncStatus: 'PENDING' | 'SUCCESS' | 'FAILED';
   totalAmount: number;

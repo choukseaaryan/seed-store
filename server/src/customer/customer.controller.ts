@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { CustomerService } from './customer.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { PaginationQueryDto } from '../common/dto';
 
 @ApiTags('Customers')
 @Controller('customers')
@@ -15,8 +16,8 @@ export class CustomerController {
   }
 
   @Get()
-  findAll() {
-    return this.customerService.findAll();
+  findAll(@Query() query: PaginationQueryDto) {
+    return this.customerService.findAll(query);
   }
 
   @Get(':id')
@@ -32,5 +33,18 @@ export class CustomerController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.customerService.remove(id);
+  }
+
+  @Get(':id/bills')
+  getBills(
+    @Param('id') id: string,
+    @Query() query: PaginationQueryDto
+  ) {
+    return this.customerService.getBills(id, query);
+  }
+
+  @Get('top')
+  getTopCustomers() {
+    return this.customerService.getTopCustomers();
   }
 }

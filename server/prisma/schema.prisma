@@ -88,8 +88,7 @@ model Supplier {
 
 enum PaymentMethod {
   CASH
-  CARD
-  UPI
+  CREDIT
 }
 
 enum SaleStatus {
