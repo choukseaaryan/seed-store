@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect } from 'react';
+import { createContext, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { AuthContextType } from '../types/auth';
 import { useAuthStore } from '../store/authStore';
@@ -19,6 +19,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
     checkAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty dependency array to run only once
 
   const login = async (email: string, password: string) => {
@@ -48,10 +49,5 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+// Export the context for use in the hook
+export { AuthContext };

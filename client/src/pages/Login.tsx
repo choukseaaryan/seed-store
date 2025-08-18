@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { Button, Input, LoadingSpinner } from '../components/ui';
+import { useAuth } from '../hooks/useAuth';
+import { Button, TextField, CircularProgress, Box, Typography } from '@mui/material';
 
 interface LocationState {
   from?: {
@@ -25,7 +25,11 @@ export default function Login() {
 
   // Show loading spinner while checking auth status
   if (authLoading) {
-    return <LoadingSpinner />;
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
+    );
   }
   
   const from = (location.state as LocationState)?.from?.pathname || '/';
@@ -38,7 +42,7 @@ export default function Login() {
     try {
       await login(email, password);
       navigate(from, { replace: true });
-    } catch (err) {
+    } catch {
       setError('Invalid email or password');
     } finally {
       setIsLoading(false);
@@ -49,25 +53,29 @@ export default function Login() {
     <div className="min-h-screen w-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <Typography variant="h4" component="h2" className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Sign in to your account
-          </h2>
+          </Typography>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm space-y-4 p-4">
-            <Input
+            <TextField
               type="email"
               label="Email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              fullWidth
+              variant="outlined"
             />
-            <Input
+            <TextField
               type="password"
               label="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              fullWidth
+              variant="outlined"
             />
           </div>
 
@@ -79,9 +87,11 @@ export default function Login() {
             <Button
               type="submit"
               className="w-full"
-              isLoading={isLoading}
+              disabled={isLoading}
+              variant="contained"
+              fullWidth
             >
-              Sign in
+              {isLoading ? <CircularProgress size={20} /> : 'Sign in'}
             </Button>
           </div>
         </form>

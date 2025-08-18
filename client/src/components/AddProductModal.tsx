@@ -51,7 +51,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ open, onClose, onSucc
     try {
       await productService.create({
         ...form,
-        price: form.price,
+        price: parseFloat(form.price),
         stockQty: parseInt(form.stockQty, 10),
       });
       onSuccess();

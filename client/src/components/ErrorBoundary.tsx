@@ -1,5 +1,5 @@
 import { Component, type ReactNode } from 'react';
-import { EmptyState, Button } from './ui';
+import { Button, Box, Typography } from '@mui/material';
 
 interface Props {
   children: ReactNode;
@@ -46,22 +46,24 @@ export class ErrorBoundary extends Component<Props, State> {
       // You can render any custom fallback UI
       return (
         this.props.fallback || (
-          <div className="min-h-screen flex items-center justify-center p-4">
-            <EmptyState
-              title="Something went wrong"
-              description={this.state.error?.message || 'An unexpected error occurred'}
-              action={
-                <div className="flex gap-4">
-                  <Button onClick={() => window.location.reload()}>
-                    Refresh Page
-                  </Button>
-                  <Button variant="primary" onClick={this.handleReset}>
-                    Try Again
-                  </Button>
-                </div>
-              }
-            />
-          </div>
+          <Box className="min-h-screen flex items-center justify-center p-4">
+            <Box className="text-center">
+              <Typography variant="h5" component="h3" className="mt-2 text-sm font-semibold text-gray-900">
+                Something went wrong
+              </Typography>
+              <Typography variant="body2" className="mt-1 text-sm text-gray-500">
+                {this.state.error?.message || 'An unexpected error occurred'}
+              </Typography>
+              <Box className="mt-6 flex gap-4 justify-center">
+                <Button onClick={() => window.location.reload()}>
+                  Refresh Page
+                </Button>
+                <Button variant="contained" onClick={this.handleReset}>
+                  Try Again
+                </Button>
+              </Box>
+            </Box>
+          </Box>
         )
       );
     }

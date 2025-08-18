@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { LoadingSpinner, Button, Input, EmptyState } from '../components/ui';
+import { CircularProgress, Button, TextField, Box, Typography } from '@mui/material';
 import { productService } from '../services';
 import type { Product } from '../types/models';
 
@@ -22,27 +22,33 @@ export default function Inventory() {
   );
 
   if (isLoading) {
-    return <LoadingSpinner />;
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="32vh">
+        <CircularProgress />
+      </Box>
+    );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="sm:flex sm:items-center sm:justify-between mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Inventory</h1>
-        <Button>Add Product</Button>
-      </div>
+    <Box className="container mx-auto px-4 py-8">
+      <Box className="sm:flex sm:items-center sm:justify-between mb-8">
+        <Typography variant="h4" component="h1" className="text-2xl font-bold text-gray-900">Inventory</Typography>
+        <Button variant="contained">Add Product</Button>
+      </Box>
 
-      <div className="mb-6">
-        <Input
+      <Box className="mb-6">
+        <TextField
           type="search"
           placeholder="Search products..."
           value={search}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+          fullWidth
+          variant="outlined"
         />
-      </div>
+      </Box>
 
       {filteredProducts?.length ?? 0 ? (
-        <div className="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-lg">
+        <Box className="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-lg">
           <table className="min-w-full divide-y divide-gray-300">
             <thead>
               <tr>
@@ -79,7 +85,7 @@ export default function Inventory() {
                     {product.stockQty}
                   </td>
                   <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium">
-                    <Button size="sm" variant="secondary">
+                    <Button size="small" variant="outlined">
                       Edit
                     </Button>
                   </td>
@@ -87,14 +93,20 @@ export default function Inventory() {
               ))}
             </tbody>
           </table>
-        </div>
+        </Box>
       ) : (
-        <EmptyState
-          title="No products found"
-          description="Get started by creating a new product"
-          action={<Button>Add Product</Button>}
-        />
+        <Box className="text-center py-12">
+          <Typography variant="h6" component="h3" className="text-sm font-semibold text-gray-900">
+            No products found
+          </Typography>
+          <Typography variant="body2" className="mt-1 text-sm text-gray-500">
+            Get started by creating a new product
+          </Typography>
+          <Box className="mt-6">
+            <Button variant="contained">Add Product</Button>
+          </Box>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 }

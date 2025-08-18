@@ -1,6 +1,6 @@
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { Navigate, useLocation } from 'react-router-dom';
-import { LoadingSpinner } from './ui';
+import { CircularProgress, Box } from '@mui/material';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,7 +12,11 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   // Only show loading state for initial auth check
   if (isLoading) {
-    return <LoadingSpinner />;
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
+    );
   }
 
   // Redirect to login if not authenticated and not already on login page
