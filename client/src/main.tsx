@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { initDB } from './utils/db'
 import { AuthProvider } from './context/AuthContext'
+import { KeyboardProvider } from './context/KeyboardContext'
 import './index.css'
 import App from './App.tsx'
 import { ErrorBoundary } from './components/ErrorBoundary.tsx'
@@ -28,8 +29,10 @@ createRoot(document.getElementById('root')!).render(
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AuthProvider>
-            <Toaster position='top-right'/>
-            <App />
+            <KeyboardProvider>
+              <Toaster position='top-right'/>
+              <App />
+            </KeyboardProvider>
           </AuthProvider>
         </BrowserRouter>
       </QueryClientProvider>

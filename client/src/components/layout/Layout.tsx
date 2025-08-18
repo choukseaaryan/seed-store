@@ -12,6 +12,9 @@ import {
   Cog6ToothIcon
 } from '@heroicons/react/24/outline'
 import { classNames } from '../../utils/helpers'
+import { useKeyboard } from '../../hooks/useKeyboard'
+import { FocusableElement } from '../FocusableElement'
+import KeyboardShortcuts from '../KeyboardShortcuts'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: HomeIcon },
@@ -31,6 +34,7 @@ const userNavigation = [
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const location = useLocation()
+  const { isKeyboardMode, toggleKeyboardMode, toggleKeyboardHelp } = useKeyboard()
 
   return (
     <div>
@@ -199,6 +203,38 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6 justify-end">
             <div className="flex items-center gap-x-4 lg:gap-x-6">
+              {/* Keyboard mode toggle */}
+              <FocusableElement>
+                <button
+                  type="button"
+                  onClick={toggleKeyboardMode}
+                  className={`p-2 rounded-md transition-colors ${
+                    isKeyboardMode 
+                      ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                  title={`${isKeyboardMode ? 'Disable' : 'Enable'} keyboard mode`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </button>
+              </FocusableElement>
+
+              {/* Keyboard shortcuts help */}
+              <FocusableElement>
+                <button
+                  type="button"
+                  onClick={toggleKeyboardHelp}
+                  className="p-2 rounded-md transition-colors"
+                  title="Show keyboard shortcuts (Ctrl+/)"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+              </FocusableElement>
+
               {/* Profile dropdown */}
               <Menu as="div" className="relative">
                 <Menu.Button className="-m-1.5 flex items-center p-1.5">
@@ -250,6 +286,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </main>
       </div>
+      
+      {/* Keyboard shortcuts help modal */}
+      <KeyboardShortcuts />
     </div>
   )
 }

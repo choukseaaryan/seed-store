@@ -8,3 +8,7 @@ export { default as ReceiptModal } from './ReceiptModal';
 export { default as AppLayout } from './layout/AppLayout';
 export { default as Layout } from './layout/Layout';
 export { default as PageHeader } from './layout/PageHeader';
+
+// Keyboard navigation components
+export { default as KeyboardShortcuts } from './KeyboardShortcuts';
+export { FocusableElement } from './FocusableElement';
