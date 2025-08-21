@@ -28,6 +28,12 @@ A full-stack inventory management and point-of-sale (POS) system built for Shank
   - Revenue analytics
   - Popular products tracking
 
+- **🖥️ Desktop Application**
+  - Native desktop experience
+  - Cross-platform support (Windows, macOS, Linux)
+  - Offline capability with local database
+  - Integrated server and client
+
 ## Tech Stack
 
 ### Frontend
@@ -45,6 +51,12 @@ A full-stack inventory management and point-of-sale (POS) system built for Shank
 - Prisma ORM
 - JWT authentication
 - HTTP-only cookie sessions
+
+### Desktop Application
+- Electron for cross-platform desktop app
+- Integrated React frontend and NestJS backend
+- Native system integration
+- Automatic updates support
 
 ## Getting Started
 
@@ -97,11 +109,15 @@ npm run dev
 
 # Start frontend dev server (from client directory)
 npm run dev
+
+# Start desktop application (from root directory)
+npm run dev:desktop
 ```
 
 The application will be available at:
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:3000
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:3001
+- Desktop App: Launches automatically in development mode
 
 ## Project Structure
 
@@ -119,34 +135,46 @@ seed-store/
 │   │   └── utils/        # Utility functions
 │   └── ...
 │
-└── server/               # Backend application
-    ├── prisma/          # Database configuration
-    │   ├── migrations/  # Database migrations
-    │   ├── schema.prisma # Database schema
-    │   ├── seed.ts     # Database seeding
-    │   └── seed-admin.ts # Admin user seeding
-    │
-    ├── src/
-    │   ├── auth/       # Authentication module
-    │   │   ├── dto/    # Data transfer objects
-    │   │   ├── auth.controller.ts
-    │   │   ├── auth.guard.ts
-    │   │   ├── auth.module.ts
-    │   │   └── auth.service.ts
-    │   │
-    │   ├── bill/       # Billing module
-    │   ├── billItem/   # Bill items module
-    │   ├── customer/   # Customer management
-    │   ├── product/    # Product management
-    │   ├── productCategory/ # Product categories
-    │   ├── supplier/   # Supplier management
-    │   ├── prisma/     # Prisma database service
-    │   │
-    │   ├── app.module.ts  # Root application module
-    │   └── main.ts     # Application entry point
-    │
-    ├── test/          # End-to-end tests
-    └── ...
+├── server/               # Backend application
+│   ├── prisma/          # Database configuration
+│   │   ├── migrations/  # Database migrations
+│   │   ├── schema.prisma # Database schema
+│   │   ├── seed.ts     # Database seeding
+│   │   └── seed-admin.ts # Admin user seeding
+│   │
+│   ├── src/
+│   │   ├── auth/       # Authentication module
+│   │   │   ├── dto/    # Data transfer objects
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── auth.guard.ts
+│   │   │   ├── auth.module.ts
+│   │   │   └── auth.service.ts
+│   │   │
+│   │   ├── bill/       # Billing module
+│   │   ├── billItem/   # Bill items module
+│   │   ├── customer/   # Customer management
+│   │   ├── product/    # Product management
+│   │   ├── productCategory/ # Product categories
+│   │   ├── supplier/   # Supplier management
+│   │   ├── prisma/     # Prisma database service
+│   │   │
+│   │   ├── app.module.ts  # Root application module
+│   │   └── main.ts     # Application entry point
+│   │
+│   ├── test/          # End-to-end tests
+│   └── ...
+│
+├── electron/            # Desktop application
+│   ├── main.js         # Main Electron process
+│   ├── preload.js      # Preload script for security
+│   ├── package.json    # Electron dependencies
+│   └── assets/         # App icons and resources
+│
+├── scripts/             # Build and development scripts
+│   ├── dev-desktop.js  # Development startup script
+│   └── build-desktop.js # Production build script
+│
+└── package.json         # Root project configuration
 ```
 
 ## API Documentation
@@ -186,7 +214,46 @@ npm run build
 # Build backend
 cd server
 npm run build
+
+# Build desktop application
+npm run build:desktop
 ```
+
+## Desktop Application
+
+### Development Mode
+```bash
+# Start all services (server + client + electron)
+npm run dev:desktop
+
+# Or start individually
+npm run dev:server    # Start backend server
+npm run dev:client    # Start frontend dev server
+npm run dev:electron  # Start electron app
+```
+
+### Building Desktop App
+```bash
+# Build for current platform
+npm run build:desktop
+
+# Build for specific platform
+cd electron
+npm run build:win     # Windows
+npm run build:mac     # macOS
+npm run build:linux   # Linux
+
+# Create distributable packages
+npm run pack:desktop  # Create unpacked app
+npm run dist:desktop  # Create installers
+```
+
+### Desktop App Features
+- **Cross-platform**: Windows, macOS, and Linux support
+- **Integrated**: Both frontend and backend run within the desktop app
+- **Native**: Full access to system resources and native APIs
+- **Offline**: Can work offline with local database
+- **Updates**: Built-in update mechanism for seamless upgrades
 
 ## Deployment
 

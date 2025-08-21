@@ -1,0 +1,56 @@
+{
+  "name": "seed-store",
+  "version": "1.0.0",
+  "description": "Full-stack inventory management and point-of-sale system with desktop application",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server",
+    "electron"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "cd client && npm run dev",
+    "dev:server": "cd server && npm run dev",
+    "dev:desktop": "concurrently \"npm run dev:server\" \"npm run dev:client\" \"npm run dev:electron\"",
+    "dev:electron": "cd client && npm run electron:dev",
+    "build": "npm run build:server && npm run build:client",
+    "build:client": "cd client && npm run build",
+    "build:server": "cd server && npm run build",
+    "build:desktop": "npm run build && cd electron && npm run build",
+    "install:all": "npm install && cd client && npm install && cd ../server && npm install && cd ../electron && npm install",
+    "start:desktop": "cd electron && npm start",
+    "pack:desktop": "npm run build && cd electron && npm run pack",
+    "dist:desktop": "npm run build && cd electron && npm run dist",
+    "lint": "npm run lint:client && npm run lint:server",
+    "lint:client": "cd client && npm run lint",
+    "lint:server": "cd server && npm run lint",
+    "test": "npm run test:client && npm run test:server",
+    "test:client": "cd client && npm test",
+    "test:server": "cd server && npm test",
+    "clean": "npm run clean:client && npm run clean:server && npm run clean:electron",
+    "clean:client": "cd client && rm -rf dist node_modules",
+    "clean:server": "cd server && rm -rf dist node_modules",
+    "clean:electron": "cd electron && rm -rf dist node_modules"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0",
+    "wait-on": "^8.0.4"
+  },
+  "keywords": [
+    "inventory-management",
+    "pos",
+    "seed-store",
+    "electron",
+    "desktop-app",
+    "react",
+    "nestjs",
+    "typescript"
+  ],
+  "author": "Seed Store Team",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}

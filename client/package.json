@@ -3,11 +3,18 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "electron": "cd ../electron && npm start",
+    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && cd ../electron && npm run dev\"",
+    "electron:build": "npm run build && cd ../electron && npm run build",
+    "electron:pack": "npm run build && cd ../electron && npm run pack",
+    "electron:dist": "npm run build && cd ../electron && npm run dist",
+    "desktop": "npm run electron:dev"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -21,8 +28,7 @@
     "@tanstack/react-query-devtools": "^5.85.0",
     "@types/node": "^24.2.1",
     "axios": "^1.11.0",
-    "clsx": "^2.1.1",
-    "date-fns": "^4.1.0",
+    "electron": "^37.3.1",
     "idb": "^8.0.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
@@ -38,6 +44,9 @@
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^5.0.0",
     "autoprefixer": "^10.4.21",
+    "concurrently": "^9.2.0",
+    "electron-builder": "^26.0.12",
+    "wait-on": "^8.0.4",
     "daisyui": "^5.0.50",
     "eslint": "^9.33.0",
     "eslint-plugin-react-hooks": "^5.2.0",
@@ -48,5 +57,18 @@
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.39.1",
     "vite": "^7.1.2"
-  }
+  },
+  "build": {
+    "appId": "com.seedstore.app",
+    "productName": "Seed Store",
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "directories": {
+      "output": "release"
+    }
+  },
+  "homepage": ".",
+  "license": "Unlicensed"
 }
