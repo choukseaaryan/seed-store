@@ -41,9 +41,8 @@ export const KeyboardProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     toggleKeyboardMode();
   });
 
-  useHotkeys('ctrl+/', (e) => {
+  useHotkeys('ctrl+slash', (e) => {
     e.preventDefault();
-    console.log('toggleKeyboardHelp');
     toggleKeyboardHelp();
   });
 
@@ -59,6 +58,13 @@ export const KeyboardProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useHotkeys('ctrl+n, cmd+n', () => {
     if (location.pathname === '/pos') {
       // Focus on new sale form
+      const newSaleForm = document.querySelector('form[data-new-sale]') as HTMLFormElement;
+      if (newSaleForm) {
+        newSaleForm.focus();
+        newSaleForm.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      navigate('/pos');
     }
   });
 

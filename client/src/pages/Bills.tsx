@@ -1,16 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button, Box, TextField, Dialog, DialogTitle, DialogContent, DialogActions, MenuItem } from "@mui/material";
 import { DataGrid, type GridColDef, type GridRenderCellParams } from "@mui/x-data-grid";
 import { billService, customerService, productService } from "../services";
 import toast from "react-hot-toast";
-import type { Bill, Customer, Product } from "../types/models";
+import type { Bill } from "../types/models";
 
 const BillsPage: React.FC = () => {
-  const [bills, setBills] = useState<Bill[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [editingBill, setEditingBill] = useState<Bill | null>(null);
   const [formData, setFormData] = useState({
     customerId: "",
@@ -27,38 +24,64 @@ const BillsPage: React.FC = () => {
     }>,
   });
 
-  // Function to fetch bills
-  const fetchBills = async () => {
-    setLoading(true);
-    try {
+  const queryClient = useQueryClient();
+
+  // Query for bills
+  const { data: bills, isLoading } = useQuery({
+    queryKey: ['bills'],
+    queryFn: async () => {
       const response = await billService.getAll();
-      setBills(response.data.data);
-    } catch (error) {
-      console.error("Error fetching bills:", error);
-      toast.error("Failed to fetch bills");
-    } finally {
-      setLoading(false);
-    }
-  };
+      return response.data.data;
+    },
+  });
 
-  // Function to fetch customers and products for dropdowns
-  const fetchDropdownData = async () => {
-    try {
-      const [customersResponse, productsResponse] = await Promise.all([
-        customerService.getAll(),
-        productService.getAll(),
-      ]);
-      setCustomers(customersResponse.data.data);
-      setProducts(productsResponse.data.data);
-    } catch (error) {
-      console.error("Error fetching dropdown data:", error);
-    }
-  };
+  // Query for customers
+  const { data: customers } = useQuery({
+    queryKey: ['customers'],
+    queryFn: async () => {
+      const response = await customerService.getAll();
+      return response.data.data;
+    },
+  });
 
-  useEffect(() => {
-    fetchBills();
-    fetchDropdownData();
-  }, []);
+  // Query for products
+  const { data: products } = useQuery({
+    queryKey: ['products'],
+    queryFn: async () => {
+      const response = await productService.getAll();
+      return response.data.data;
+    },
+  });
+
+  // Mutation for updating bills
+  const updateBillMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Bill> }) => 
+      billService.update(id, data),
+    onSuccess: () => {
+      toast.success("Bill updated successfully!");
+      resetForm();
+      setEditingBill(null);
+      setIsOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['bills'] });
+    },
+    onError: (error) => {
+      console.error("Error updating bill:", error);
+      toast.error("Failed to update bill");
+    },
+  });
+
+  // Mutation for deleting bills
+  const deleteBillMutation = useMutation({
+    mutationFn: billService.delete,
+    onSuccess: () => {
+      toast.success("Bill deleted successfully!");
+      queryClient.invalidateQueries({ queryKey: ['bills'] });
+    },
+    onError: (error) => {
+      console.error("Error deleting bill:", error);
+      toast.error("Failed to delete bill");
+    },
+  });
 
   const handleEditBill = async () => {
     if (!editingBill || !formData.customerId || !formData.invoiceNo || formData.billItems.length === 0) {
@@ -66,35 +89,14 @@ const BillsPage: React.FC = () => {
       return;
     }
 
-    try {
-      const response = await billService.update(editingBill.id, formData as Partial<Bill>);
-      if (response.status === 200) {
-        toast.success("Bill updated successfully!");
-        resetForm();
-        setEditingBill(null);
-        setIsOpen(false);
-        fetchBills();
-      }
-    } catch (error) {
-      console.error("Error updating bill:", error);
-      toast.error("Failed to update bill");
-    }
+    updateBillMutation.mutate({ id: editingBill.id, data: formData as Partial<Bill> });
   };
 
   const handleDeleteBill = async (id: string) => {
     const confirmed = window.confirm("Are you sure you want to delete this bill?");
     if (!confirmed) return;
 
-    try {
-      const response = await billService.delete(id);
-      if (response.status === 200) {
-        toast.success("Bill deleted successfully!");
-        fetchBills();
-      }
-    } catch (error) {
-      console.error("Error deleting bill:", error);
-      toast.error("Failed to delete bill");
-    }
+    deleteBillMutation.mutate(id);
   };
 
   const openEditModal = (bill: Bill) => {
@@ -217,6 +219,7 @@ const BillsPage: React.FC = () => {
             color="error"
             size="small"
             onClick={() => handleDeleteBill(params.row.id)}
+            disabled={deleteBillMutation.isPending}
           >
             Delete
           </Button>
@@ -231,8 +234,8 @@ const BillsPage: React.FC = () => {
       
       <Box mt={4}>
         <DataGrid
-          loading={loading}
-          rows={bills}
+          loading={isLoading}
+          rows={bills || []}
           columns={columns}
           label="Existing Bills"
           disableRowSelectionOnClick
@@ -260,7 +263,7 @@ const BillsPage: React.FC = () => {
               margin="normal"
               required
             >
-              {customers.map((customer) => (
+              {customers?.map((customer) => (
                 <MenuItem key={customer.id} value={customer.id}>
                   {customer.name}
                 </MenuItem>
@@ -305,7 +308,7 @@ const BillsPage: React.FC = () => {
                   size="small"
                   required
                 >
-                  {products.map((product) => (
+                  {products?.map((product) => (
                     <MenuItem key={product.id} value={product.id}>
                       {product.itemName}
                     </MenuItem>
@@ -377,6 +380,7 @@ const BillsPage: React.FC = () => {
           <Button 
             variant="contained" 
             onClick={handleEditBill}
+            disabled={updateBillMutation.isPending}
           >
             Update
           </Button>

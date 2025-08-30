@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogTitle,
@@ -11,7 +12,6 @@ import {
   Checkbox,
 } from "@mui/material";
 import { productCategoryService, productService } from "../services";
-import type { ProductCategory } from "../types/models";
 
 interface AddProductModalProps {
   open: boolean;
@@ -20,7 +20,6 @@ interface AddProductModalProps {
 }
 
 const AddProductModal: React.FC<AddProductModalProps> = ({ open, onClose, onSuccess }) => {
-  const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [form, setForm] = useState({
     categoryId: "",
     companyName: "",
@@ -32,12 +31,31 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ open, onClose, onSucc
     subItemContainer: false,
   });
 
-  // Fetch categories for dropdown
-  useEffect(() => {
-    if (open) {
-      productCategoryService.getAll().then((res) => setCategories(res.data.data));
-    }
-  }, [open]);
+  const queryClient = useQueryClient();
+
+  // Query for categories
+  const { data: categories } = useQuery({
+    queryKey: ['product-categories'],
+    queryFn: async () => {
+      const response = await productCategoryService.getAll();
+      return response.data.data;
+    },
+    enabled: open, // Only fetch when modal is open
+  });
+
+  // Mutation for creating products
+  const createProductMutation = useMutation({
+    mutationFn: productService.create,
+    onSuccess: () => {
+      onSuccess();
+      onClose();
+      // Invalidate products query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
+    onError: (err) => {
+      console.error("Error creating product:", err);
+    },
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -48,17 +66,11 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ open, onClose, onSucc
   };
 
   const handleSubmit = async () => {
-    try {
-      await productService.create({
-        ...form,
-        price: parseFloat(form.price),
-        stockQty: parseInt(form.stockQty, 10),
-      });
-      onSuccess();
-      onClose();
-    } catch (err) {
-      console.error("Error creating product:", err);
-    }
+    createProductMutation.mutate({
+      ...form,
+      price: parseFloat(form.price),
+      stockQty: parseInt(form.stockQty, 10),
+    });
   };
 
   return (
@@ -74,7 +86,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ open, onClose, onSucc
           fullWidth
           margin="normal"
         >
-          {categories.map((cat) => (
+          {categories?.map((cat) => (
             <MenuItem key={cat.id} value={cat.id}>
               {cat.name}
             </MenuItem>
@@ -151,7 +163,11 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ open, onClose, onSucc
 
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" onClick={handleSubmit}>
+        <Button 
+          variant="contained" 
+          onClick={handleSubmit}
+          disabled={createProductMutation.isPending}
+        >
           Save
         </Button>
       </DialogActions>

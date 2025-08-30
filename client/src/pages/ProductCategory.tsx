@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button, Box, TextField, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import { DataGrid, type GridColDef, type GridRenderCellParams } from "@mui/x-data-grid";
 import { productCategoryService } from "../services";
@@ -6,29 +7,65 @@ import toast from "react-hot-toast";
 import type { ProductCategory } from "../types/models";
 
 const ProductCategoryPage: React.FC = () => {
-  const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [editingCategory, setEditingCategory] = useState<ProductCategory | null>(null);
   const [formData, setFormData] = useState({ name: "" });
 
-  // Function to fetch categories
-  const fetchCategories = async () => {
-    setLoading(true);
-    try {
-      const response = await productCategoryService.getAll();
-      setCategories(response.data.data);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-      toast.error("Failed to fetch categories");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+  // Query for categories
+  const { data: categories, isLoading } = useQuery({
+    queryKey: ['product-categories'],
+    queryFn: async () => {
+      const response = await productCategoryService.getAll();
+      return response.data.data;
+    },
+  });
+
+  // Mutation for creating categories
+  const createCategoryMutation = useMutation({
+    mutationFn: productCategoryService.create,
+    onSuccess: () => {
+      toast.success("Category added successfully!");
+      setFormData({ name: "" });
+      setIsOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['product-categories'] });
+    },
+    onError: (error) => {
+      console.error("Error creating category:", error);
+      toast.error("Failed to create category");
+    },
+  });
+
+  // Mutation for updating categories
+  const updateCategoryMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<ProductCategory> }) => 
+      productCategoryService.update(id, data),
+    onSuccess: () => {
+      toast.success("Category updated successfully!");
+      setFormData({ name: "" });
+      setEditingCategory(null);
+      setIsOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['product-categories'] });
+    },
+    onError: (error) => {
+      console.error("Error updating category:", error);
+      toast.error("Failed to update category");
+    },
+  });
+
+  // Mutation for deleting categories
+  const deleteCategoryMutation = useMutation({
+    mutationFn: productCategoryService.delete,
+    onSuccess: () => {
+      toast.success("Category deleted successfully!");
+      queryClient.invalidateQueries({ queryKey: ['product-categories'] });
+    },
+    onError: (error) => {
+      console.error("Error deleting category:", error);
+      toast.error("Failed to delete category");
+    },
+  });
 
   const handleAddCategory = async () => {
     if (!formData.name.trim()) {
@@ -36,18 +73,7 @@ const ProductCategoryPage: React.FC = () => {
       return;
     }
 
-    try {
-      const response = await productCategoryService.create({ name: formData.name });
-      if (response.status === 201) {
-        toast.success("Category added successfully!");
-        setFormData({ name: "" });
-        setIsOpen(false);
-        fetchCategories();
-      }
-    } catch (error) {
-      console.error("Error creating category:", error);
-      toast.error("Failed to create category");
-    }
+    createCategoryMutation.mutate({ name: formData.name });
   };
 
   const handleEditCategory = async () => {
@@ -56,35 +82,14 @@ const ProductCategoryPage: React.FC = () => {
       return;
     }
 
-    try {
-      const response = await productCategoryService.update(editingCategory.id, { name: formData.name });
-      if (response.status === 200) {
-        toast.success("Category updated successfully!");
-        setFormData({ name: "" });
-        setEditingCategory(null);
-        setIsOpen(false);
-        fetchCategories();
-      }
-    } catch (error) {
-      console.error("Error updating category:", error);
-      toast.error("Failed to update category");
-    }
+    updateCategoryMutation.mutate({ id: editingCategory.id, data: { name: formData.name } });
   };
 
   const handleDeleteCategory = async (id: string) => {
     const confirmed = window.confirm("Are you sure you want to delete this category?");
     if (!confirmed) return;
 
-    try {
-      const response = await productCategoryService.delete(id);
-      if (response.status === 200) {
-        toast.success("Category deleted successfully!");
-        fetchCategories();
-      }
-    } catch (error) {
-      console.error("Error deleting category:", error);
-      toast.error("Failed to delete category");
-    }
+    deleteCategoryMutation.mutate(id);
   };
 
   const openAddModal = () => {
@@ -131,6 +136,7 @@ const ProductCategoryPage: React.FC = () => {
             color="error"
             size="small"
             onClick={() => handleDeleteCategory(params.row.id)}
+            disabled={deleteCategoryMutation.isPending}
           >
             Delete
           </Button>
@@ -150,8 +156,8 @@ const ProductCategoryPage: React.FC = () => {
       
       <Box mt={4}>
         <DataGrid
-          loading={loading}
-          rows={categories}
+          loading={isLoading}
+          rows={categories || []}
           columns={columns}
           label="Existing Categories"
           disableRowSelectionOnClick
@@ -164,7 +170,6 @@ const ProductCategoryPage: React.FC = () => {
         />
       </Box>
 
-      {/* Add/Edit Category Modal */}
       <Dialog open={isOpen} onClose={closeModal} fullWidth maxWidth="sm">
         <DialogTitle>
           {editingCategory ? "Edit Category" : "Add Category"}
@@ -185,6 +190,7 @@ const ProductCategoryPage: React.FC = () => {
           <Button 
             variant="contained" 
             onClick={editingCategory ? handleEditCategory : handleAddCategory}
+            disabled={createCategoryMutation.isPending || updateCategoryMutation.isPending}
           >
             {editingCategory ? "Update" : "Save"}
           </Button>

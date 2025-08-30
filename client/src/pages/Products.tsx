@@ -1,41 +1,40 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button, Box } from "@mui/material";
 import { DataGrid, type GridColDef, type GridRenderCellParams } from "@mui/x-data-grid";
 import { productService } from "../services/productService";
 import AddProductModal from "../components/AddProductModal";
-import type { Product } from "../types/models";
 
 const Products : React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  // Function to fetch products
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      productService.getAll().then(response => {
-      setProducts(response.data.data);
-      });
-    } catch (error) {
-      console.error("Error fetching products:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Query for products
+  const { data: products, isLoading } = useQuery({
+    queryKey: ['products'],
+    queryFn: async () => {
+      const response = await productService.getAll();
+      return response.data.data;
+    },
+  });
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+  // Mutation for deleting products
+  const deleteProductMutation = useMutation({
+    mutationFn: productService.delete,
+    onSuccess: () => {
+      // Invalidate and refetch products
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
+    onError: (error) => {
+      console.error("Error deleting product:", error);
+    },
+  });
 
   const handleDeleteProduct = async (id: string) => {
     const confirmed = window.confirm("Are you sure you want to delete this product?");
     if (!confirmed) return;
 
-    const response = await productService.delete(id);
-    if (response.status === 200) {
-      fetchProducts();
-    }
+    deleteProductMutation.mutate(id);
   };
 
   const columns: GridColDef[] = [
@@ -83,6 +82,7 @@ const Products : React.FC = () => {
           variant="outlined"
           color="error"
           onClick={() => handleDeleteProduct(params.row.id)}
+          disabled={deleteProductMutation.isPending}
         >
           Delete
         </Button>
@@ -98,13 +98,10 @@ const Products : React.FC = () => {
           Add Product
         </Button>
       </Box>
-      <Box
-        mt={4}
-      >
-        {/* Render existing products in a table along with a delete and edit button */}
+      <Box mt={4}>
         <DataGrid
-          loading={loading}
-          rows={products}
+          loading={isLoading}
+          rows={products || []}
           columns={columns}
           label="Existing Products"
           disableRowSelectionOnClick
@@ -117,11 +114,12 @@ const Products : React.FC = () => {
         />
       </Box>
 
-      {/* Add Product Modal */}
       <AddProductModal
         open={isOpen}
         onClose={() => setIsOpen(false)}
-        onSuccess={fetchProducts}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['products'] });
+        }}
       />
     </>
   );

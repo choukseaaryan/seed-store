@@ -1,5 +1,4 @@
 import { useKeyboard } from '../hooks/useKeyboard';
-import { useHotkeys } from 'react-hotkeys-hook';
 
 interface ShortcutGroup {
   title: string;
@@ -45,10 +44,6 @@ const shortcutGroups: ShortcutGroup[] = [
 export default function KeyboardShortcuts() {
   const { isKeyboardMode, showKeyboardHelp, toggleKeyboardHelp } = useKeyboard();
 
-  useHotkeys('ctrl+/', (e) => {
-    e.preventDefault();
-    toggleKeyboardHelp();
-  });
 
   if (!showKeyboardHelp) return null;
 

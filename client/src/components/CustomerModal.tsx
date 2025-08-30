@@ -1,7 +1,7 @@
 import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Box, Typography } from '@mui/material';
 import { customerService } from '../services';
-import { useQueryClient } from '@tanstack/react-query';
 
 interface CustomerModalProps {
   isOpen: boolean;
@@ -16,10 +16,35 @@ export default function CustomerModal({ isOpen, onClose, onCustomerCreated }: Cu
     address: '',
     pinCode: ''
   });
-  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   
   const queryClient = useQueryClient();
+
+  // Mutation for creating customers
+  const createCustomerMutation = useMutation({
+    mutationFn: customerService.create,
+    onSuccess: (response) => {
+      const customerId = response.data.data.id;
+      
+      // Invalidate customers query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      
+      onCustomerCreated(customerId);
+      onClose();
+      
+      // Reset form
+      setFormData({
+        name: '',
+        contactNumber: '',
+        address: '',
+        pinCode: ''
+      });
+    },
+    onError: (error) => {
+      console.error('Error creating customer:', error);
+      setErrors({ submit: 'Failed to create customer. Please try again.' });
+    },
+  });
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -50,30 +75,7 @@ export default function CustomerModal({ isOpen, onClose, onCustomerCreated }: Cu
     
     if (!validateForm()) return;
 
-    setIsLoading(true);
-    try {
-      const response = await customerService.create(formData);
-      const customerId = response.data.data.id;
-      
-      // Invalidate customers query to refresh the list
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
-      
-      onCustomerCreated(customerId);
-      onClose();
-      
-      // Reset form
-      setFormData({
-        name: '',
-        contactNumber: '',
-        address: '',
-        pinCode: ''
-      });
-    } catch (error) {
-      console.error('Error creating customer:', error);
-      setErrors({ submit: 'Failed to create customer. Please try again.' });
-    } finally {
-      setIsLoading(false);
-    }
+    createCustomerMutation.mutate(formData);
   };
 
   return (
@@ -132,14 +134,14 @@ export default function CustomerModal({ isOpen, onClose, onCustomerCreated }: Cu
             type="button"
             variant="outlined"
             onClick={onClose}
-            disabled={isLoading}
+            disabled={createCustomerMutation.isPending}
           >
             Cancel
           </Button>
           <Button
             type="submit"
             variant="contained"
-            disabled={isLoading}
+            disabled={createCustomerMutation.isPending}
           >
             Create Customer
           </Button>

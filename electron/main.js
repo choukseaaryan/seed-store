@@ -24,6 +24,8 @@ function createWindow() {
   // Show window when ready to prevent visual flash
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
+    // Maximize the window
+    mainWindow.maximize();
   });
 
   // Handle window closed

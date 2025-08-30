@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button, Box, TextField, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import { DataGrid, type GridColDef, type GridRenderCellParams } from "@mui/x-data-grid";
 import { supplierService } from "../services";
@@ -6,9 +7,7 @@ import toast from "react-hot-toast";
 import type { Supplier } from "../types/models";
 
 const SuppliersPage: React.FC = () => {
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -18,23 +17,61 @@ const SuppliersPage: React.FC = () => {
     contactNumber: "",
   });
 
-  // Function to fetch suppliers
-  const fetchSuppliers = async () => {
-    setLoading(true);
-    try {
-      const response = await supplierService.getAll();
-      setSuppliers(response.data.data);
-    } catch (error) {
-      console.error("Error fetching suppliers:", error);
-      toast.error("Failed to fetch suppliers");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    fetchSuppliers();
-  }, []);
+  // Query for suppliers
+  const { data: suppliers, isLoading } = useQuery({
+    queryKey: ['suppliers'],
+    queryFn: async () => {
+      const response = await supplierService.getAll();
+      return response.data.data;
+    },
+  });
+
+  // Mutation for creating suppliers
+  const createSupplierMutation = useMutation({
+    mutationFn: supplierService.create,
+    onSuccess: () => {
+      toast.success("Supplier added successfully!");
+      resetForm();
+      setIsOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+    },
+    onError: (error) => {
+      console.error("Error creating supplier:", error);
+      toast.error("Failed to create supplier");
+    },
+  });
+
+  // Mutation for updating suppliers
+  const updateSupplierMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Supplier> }) => 
+      supplierService.update(id, data),
+    onSuccess: () => {
+      toast.success("Supplier updated successfully!");
+      resetForm();
+      setEditingSupplier(null);
+      setIsOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+    },
+    onError: (error) => {
+      console.error("Error updating supplier:", error);
+      toast.error("Failed to update supplier");
+    },
+  });
+
+  // Mutation for deleting suppliers
+  const deleteSupplierMutation = useMutation({
+    mutationFn: supplierService.delete,
+    onSuccess: () => {
+      toast.success("Supplier deleted successfully!");
+      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+    },
+    onError: (error) => {
+      console.error("Error deleting supplier:", error);
+      toast.error("Failed to delete supplier");
+    },
+  });
 
   const handleAddSupplier = async () => {
     if (!formData.name.trim() || !formData.contactNumber.trim()) {
@@ -42,18 +79,7 @@ const SuppliersPage: React.FC = () => {
       return;
     }
 
-    try {
-      const response = await supplierService.create(formData);
-      if (response.status === 201) {
-        toast.success("Supplier added successfully!");
-        resetForm();
-        setIsOpen(false);
-        fetchSuppliers();
-      }
-    } catch (error) {
-      console.error("Error creating supplier:", error);
-      toast.error("Failed to create supplier");
-    }
+    createSupplierMutation.mutate(formData);
   };
 
   const handleEditSupplier = async () => {
@@ -62,35 +88,14 @@ const SuppliersPage: React.FC = () => {
       return;
     }
 
-    try {
-      const response = await supplierService.update(editingSupplier.id, formData);
-      if (response.status === 200) {
-        toast.success("Supplier updated successfully!");
-        resetForm();
-        setEditingSupplier(null);
-        setIsOpen(false);
-        fetchSuppliers();
-      }
-    } catch (error) {
-      console.error("Error updating supplier:", error);
-      toast.error("Failed to update supplier");
-    }
+    updateSupplierMutation.mutate({ id: editingSupplier.id, data: formData });
   };
 
   const handleDeleteSupplier = async (id: string) => {
     const confirmed = window.confirm("Are you sure you want to delete this supplier?");
     if (!confirmed) return;
 
-    try {
-      const response = await supplierService.delete(id);
-      if (response.status === 200) {
-        toast.success("Supplier deleted successfully!");
-        fetchSuppliers();
-      }
-    } catch (error) {
-      console.error("Error deleting supplier:", error);
-      toast.error("Failed to delete supplier");
-    }
+    deleteSupplierMutation.mutate(id);
   };
 
   const openAddModal = () => {
@@ -177,6 +182,7 @@ const SuppliersPage: React.FC = () => {
             color="error"
             size="small"
             onClick={() => handleDeleteSupplier(params.row.id)}
+            disabled={deleteSupplierMutation.isPending}
           >
             Delete
           </Button>
@@ -196,8 +202,8 @@ const SuppliersPage: React.FC = () => {
       
       <Box mt={4}>
         <DataGrid
-          loading={loading}
-          rows={suppliers}
+          loading={isLoading}
+          rows={suppliers || []}
           columns={columns}
           label="Existing Suppliers"
           disableRowSelectionOnClick
@@ -210,7 +216,6 @@ const SuppliersPage: React.FC = () => {
         />
       </Box>
 
-      {/* Add/Edit Supplier Modal */}
       <Dialog open={isOpen} onClose={closeModal} fullWidth maxWidth="sm">
         <DialogTitle>
           {editingSupplier ? "Edit Supplier" : "Add Supplier"}
@@ -265,6 +270,7 @@ const SuppliersPage: React.FC = () => {
           <Button 
             variant="contained" 
             onClick={editingSupplier ? handleEditSupplier : handleAddSupplier}
+            disabled={createSupplierMutation.isPending || updateSupplierMutation.isPending}
           >
             {editingSupplier ? "Update" : "Save"}
           </Button>

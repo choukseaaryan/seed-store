@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button, Box, TextField, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import { DataGrid, type GridColDef, type GridRenderCellParams } from "@mui/x-data-grid";
 import { customerService } from "../services";
@@ -6,9 +7,7 @@ import toast from "react-hot-toast";
 import type { Customer } from "../types/models";
 
 const CustomersPage: React.FC = () => {
-  const [customers, setCustomers] = useState<Customer[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -17,23 +16,61 @@ const CustomersPage: React.FC = () => {
     contactNumber: "",
   });
 
-  // Function to fetch customers
-  const fetchCustomers = async () => {
-    setLoading(true);
-    try {
-      const response = await customerService.getAll();
-      setCustomers(response.data.data);
-    } catch (error) {
-      console.error("Error fetching customers:", error);
-      toast.error("Failed to fetch customers");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    fetchCustomers();
-  }, []);
+  // Query for customers
+  const { data: customers, isLoading } = useQuery({
+    queryKey: ['customers'],
+    queryFn: async () => {
+      const response = await customerService.getAll();
+      return response.data.data;
+    },
+  });
+
+  // Mutation for creating customers
+  const createCustomerMutation = useMutation({
+    mutationFn: customerService.create,
+    onSuccess: () => {
+      toast.success("Customer added successfully!");
+      resetForm();
+      setIsOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+    },
+    onError: (error) => {
+      console.error("Error creating customer:", error);
+      toast.error("Failed to create customer");
+    },
+  });
+
+  // Mutation for updating customers
+  const updateCustomerMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Customer> }) => 
+      customerService.update(id, data),
+    onSuccess: () => {
+      toast.success("Customer updated successfully!");
+      resetForm();
+      setEditingCustomer(null);
+      setIsOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+    },
+    onError: (error) => {
+      console.error("Error updating customer:", error);
+      toast.error("Failed to update customer");
+    },
+  });
+
+  // Mutation for deleting customers
+  const deleteCustomerMutation = useMutation({
+    mutationFn: customerService.delete,
+    onSuccess: () => {
+      toast.success("Customer deleted successfully!");
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+    },
+    onError: (error) => {
+      console.error("Error deleting customer:", error);
+      toast.error("Failed to delete customer");
+    },
+  });
 
   const handleAddCustomer = async () => {
     if (!formData.name.trim() || !formData.contactNumber.trim()) {
@@ -41,18 +78,7 @@ const CustomersPage: React.FC = () => {
       return;
     }
 
-    try {
-      const response = await customerService.create(formData);
-      if (response.status === 201) {
-        toast.success("Customer added successfully!");
-        resetForm();
-        setIsOpen(false);
-        fetchCustomers();
-      }
-    } catch (error) {
-      console.error("Error creating customer:", error);
-      toast.error("Failed to create customer");
-    }
+    createCustomerMutation.mutate(formData);
   };
 
   const handleEditCustomer = async () => {
@@ -61,35 +87,14 @@ const CustomersPage: React.FC = () => {
       return;
     }
 
-    try {
-      const response = await customerService.update(editingCustomer.id, formData);
-      if (response.status === 200) {
-        toast.success("Customer updated successfully!");
-        resetForm();
-        setEditingCustomer(null);
-        setIsOpen(false);
-        fetchCustomers();
-      }
-    } catch (error) {
-      console.error("Error updating customer:", error);
-      toast.error("Failed to update customer");
-    }
+    updateCustomerMutation.mutate({ id: editingCustomer.id, data: formData });
   };
 
   const handleDeleteCustomer = async (id: string) => {
     const confirmed = window.confirm("Are you sure you want to delete this customer?");
     if (!confirmed) return;
 
-    try {
-      const response = await customerService.delete(id);
-      if (response.status === 200) {
-        toast.success("Customer deleted successfully!");
-        fetchCustomers();
-      }
-    } catch (error) {
-      console.error("Error deleting customer:", error);
-      toast.error("Failed to delete customer");
-    }
+    deleteCustomerMutation.mutate(id);
   };
 
   const openAddModal = () => {
@@ -169,6 +174,7 @@ const CustomersPage: React.FC = () => {
             color="error"
             size="small"
             onClick={() => handleDeleteCustomer(params.row.id)}
+            disabled={deleteCustomerMutation.isPending}
           >
             Delete
           </Button>
@@ -188,8 +194,8 @@ const CustomersPage: React.FC = () => {
       
       <Box mt={4}>
         <DataGrid
-          loading={loading}
-          rows={customers}
+          loading={isLoading}
+          rows={customers || []}
           columns={columns}
           label="Existing Customers"
           disableRowSelectionOnClick
@@ -202,7 +208,6 @@ const CustomersPage: React.FC = () => {
         />
       </Box>
 
-      {/* Add/Edit Customer Modal */}
       <Dialog open={isOpen} onClose={closeModal} fullWidth maxWidth="sm">
         <DialogTitle>
           {editingCustomer ? "Edit Customer" : "Add Customer"}
@@ -249,6 +254,7 @@ const CustomersPage: React.FC = () => {
           <Button 
             variant="contained" 
             onClick={editingCustomer ? handleEditCustomer : handleAddCustomer}
+            disabled={createCustomerMutation.isPending || updateCustomerMutation.isPending}
           >
             {editingCustomer ? "Update" : "Save"}
           </Button>
