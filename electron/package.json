@@ -23,9 +23,9 @@
   "author": "Seed Store Team",
   "license": "UNLICENSED",
   "devDependencies": {
-    "electron": "^37.3.1",
-    "electron-builder": "^26.0.12",
-    "cross-env": "^7.0.3"
+    "cross-env": "^7.0.3",
+    "electron": "37.4.0",
+    "electron-builder": "^26.0.12"
   },
   "build": {
     "appId": "com.seedstore.desktop",
@@ -37,22 +37,49 @@
     "files": [
       "main.js",
       "preload.js",
+      "config.js",
+      "server-manager.js",
       "assets/**/*",
-      "../client/dist/**/*",
-      "!../client/dist/**/*.map"
+      {
+        "from": "../client/dist",
+        "to": ".",
+        "filter": ["**/*", "!**/*.map"]
+      }
     ],
     "extraResources": [
       {
         "from": "../server/dist",
         "to": "server",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "../server/node_modules",
+        "to": "server/node_modules",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "../server/package.json",
+        "to": "server/package.json"
+      },
+      {
+        "from": "../server/prisma",
+        "to": "server/prisma",
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "win": {
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "assets/icon.ico"
@@ -61,7 +88,10 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
       "icon": "assets/icon.icns",
@@ -71,7 +101,9 @@
       "target": [
         {
           "target": "AppImage",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "assets/icon.png",

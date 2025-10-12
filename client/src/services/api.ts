@@ -3,13 +3,27 @@ import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import type { ApiError } from '../types/api';
 import toast from 'react-hot-toast';
 
+// Detect if running in Electron
+const isElectron = () => {
+  return (window as any).electronAPI !== undefined;
+};
+
+// Get API base URL based on environment
+const getApiBaseUrl = () => {
+  if (isElectron()) {
+    return 'http://localhost:3001';
+  }
+  return import.meta.env.VITE_API_URL || 'http://localhost:3001';
+};
+
 // Create axios instance
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
+  baseURL: getApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
   withCredentials: true,
+  timeout: 15000, // 15 second timeout
 });
 
 // Request interceptor
@@ -19,12 +33,6 @@ api.interceptors.request.use(
     const timestamp = new Date().getTime();
     const separator = config.url?.includes('?') ? '&' : '?';
     config.url = `${config.url}${separator}_t=${timestamp}`;
-
-    // Add any auth headers if needed (in addition to cookies)
-    // const token = localStorage.getItem('additional_auth_token');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
 
     return config;
   },
@@ -44,11 +52,19 @@ api.interceptors.response.use(
   },
   (error: AxiosError<ApiError>) => {
     if (!error.response) {
-      // Network error
-      return Promise.reject({
-        message: 'Network error - please check your connection',
-        status: 0,
-      });
+      // Network error - likely server not running in Electron
+      if (isElectron()) {
+        toast.error('Server starting up, please wait...');
+        return Promise.reject({
+          message: 'Server is starting up, please wait...',
+          status: 0,
+        });
+      } else {
+        return Promise.reject({
+          message: 'Network error - please check your connection',
+          status: 0,
+        });
+      }
     }
 
     const message = error.response.data?.message;

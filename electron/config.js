@@ -7,15 +7,20 @@ module.exports = {
     clientUrl: 'http://localhost:3000',
     serverUrl: 'http://localhost:3001',
     openDevTools: true,
-    enableHotReload: true
+    enableHotReload: true,
+    useEmbeddedServer: false,
+    nodeEnv: 'development'
   },
   
   // Production settings
   production: {
-    clientPath: path.join(__dirname, '../client/dist/index.html'),
-    serverPath: path.join(__dirname, '../server/dist'),
+    clientPath: path.join(__dirname, 'index.html'),
+    serverPath: path.join(__dirname, '..', 'server'),
+    serverPort: 3001,
     openDevTools: false,
-    enableHotReload: false
+    enableHotReload: false,
+    useEmbeddedServer: true,
+    nodeEnv: 'production'
   },
   
   // Window settings
@@ -34,7 +39,7 @@ module.exports = {
     nodeIntegration: false,
     contextIsolation: true,
     enableRemoteModule: false,
-    webSecurity: true
+    webSecurity: false // Disable for local file access in Electron
   },
   
   // Build settings

@@ -9,12 +9,18 @@ datasource db {
 
 model User {
   id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String
+  email     String   @unique @db.VarChar(255)
+  password  String   @db.VarChar(255)
+  name      String   @db.VarChar(255)
   role      Role     @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  createdBy String?
+  updatedBy String?
+
+  @@index([email])
+  @@index([role])
 }
 
 enum Role {
@@ -23,67 +29,127 @@ enum Role {
 }
 
 model Customer {
-  id            String  @id @default(cuid())
-  name          String
-  address       String?
-  pinCode       String?
-  contactNumber String
+  id            String    @id @default(cuid())
+  name          String    @db.VarChar(255)
+  address       String?   @db.VarChar(500)
+  pinCode       String?   @db.VarChar(10)
+  contactNumber String    @db.VarChar(20)
   bills         Bill[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+  createdBy     String?
+  updatedBy     String?
+
+  @@index([contactNumber])
+  @@index([name])
 }
 
 model ProductCategory {
-  id       String    @id @default(cuid())
-  name     String    @unique
-  products Product[]
+  id        String    @id @default(cuid())
+  name      String    @unique @db.VarChar(255)
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?
+  updatedBy String?
+
+  @@index([name])
 }
 
 model Product {
   id               String          @id @default(cuid())
   categoryId       String
-  category         ProductCategory @relation(fields: [categoryId], references: [id])
-  companyName      String
-  itemCode         String          @unique
-  itemName         String
-  technicalName    String?
+  category         ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  supplierId       String?
+  supplier         Supplier?       @relation(fields: [supplierId], references: [id])
+  companyName      String          @db.VarChar(255)
+  itemCode         String          @unique @db.VarChar(50)
+  itemName         String          @db.VarChar(255)
+  technicalName    String?         @db.VarChar(255)
   price            Decimal         @default(0.00) @db.Decimal(10, 2)
   stockQty         Int
+  minStockLevel    Int             @default(0)
+  reorderLevel     Int             @default(0)
   subItemContainer Boolean         @default(false)
   billItems        BillItem[]
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  deletedAt        DateTime?
+  createdBy        String?
+  updatedBy        String?
+
+  @@index([itemCode])
+  @@index([itemName])
+  @@index([categoryId])
+  @@index([supplierId])
+  @@index([stockQty])
 }
 
 model Bill {
   id            String        @id @default(cuid())
-  invoiceNo     String        @unique
+  invoiceNo     String        @unique @db.VarChar(50)
   date          DateTime
   customerId    String?
   customer      Customer?     @relation(fields: [customerId], references: [id])
+  userId        String?
+  user          User?         @relation(fields: [userId], references: [id])
   paymentMethod PaymentMethod
   saleStatus    SaleStatus
   syncStatus    SyncStatus    @default(PENDING)
   totalAmount   Decimal       @db.Decimal(10, 2)
+  paidAmount    Decimal       @default(0.00) @db.Decimal(10, 2)
+  balanceAmount Decimal       @default(0.00) @db.Decimal(10, 2)
+  dueDate       DateTime?
   billItems     BillItem[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
+  createdBy     String?
+  updatedBy     String?
+
+  @@index([invoiceNo])
+  @@index([date])
+  @@index([customerId])
+  @@index([userId])
+  @@index([saleStatus])
 }
 
 model BillItem {
   id        String  @id @default(cuid())
   billId    String
-  bill      Bill    @relation(fields: [billId], references: [id])
+  bill      Bill    @relation(fields: [billId], references: [id], onDelete: Cascade)
   productId String
   product   Product @relation(fields: [productId], references: [id])
   quantity  Int
   price     Decimal @default(0.00) @db.Decimal(10, 2)
   total     Decimal @default(0.00) @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+
+  @@index([billId])
+  @@index([productId])
 }
 
 model Supplier {
-  id            String  @id @default(cuid())
-  name          String
-  address       String?
-  pinCode       String?
-  contactPerson String?
-  contactNumber String
+  id            String    @id @default(cuid())
+  name          String    @db.VarChar(255)
+  address       String?   @db.VarChar(500)
+  pinCode       String?   @db.VarChar(10)
+  contactPerson String?   @db.VarChar(255)
+  contactNumber String    @db.VarChar(20)
+  products      Product[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+  createdBy     String?
+  updatedBy     String?
+
+  @@index([name])
+  @@index([contactNumber])
 }
 
 enum PaymentMethod {
@@ -92,9 +158,13 @@ enum PaymentMethod {
 }
 
 enum SaleStatus {
+  DRAFT
+  PENDING
   PAID
+  PARTIAL
   VOID
   REFUND
+  CANCELLED
 }
 
 enum SyncStatus {

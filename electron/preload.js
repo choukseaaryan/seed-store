@@ -9,7 +9,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   // Menu actions
   onMenuAction: (callback) => {
-    ipcRenderer.on('menu-action', callback);
+    ipcRenderer.on('menu-action', (event, action) => callback(action));
   },
   
   // Remove menu action listener
@@ -24,7 +24,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   isDev: process.env.NODE_ENV === 'development'
 });
 
-// Handle window events
+// Ensure electronAPI is available before DOM loads
 window.addEventListener('DOMContentLoaded', () => {
   // Set title
   document.title = 'Seed Store - Inventory Management System';
@@ -32,22 +32,26 @@ window.addEventListener('DOMContentLoaded', () => {
   // Add platform-specific CSS classes
   document.body.classList.add(`platform-${process.platform}`);
   
-  // Handle menu actions
-  window.electronAPI.onMenuAction((event, action) => {
-    switch (action) {
-      case 'new-sale':
-        // Navigate to POS page if we're in the app
-        if (window.location.pathname !== '/pos') {
-          window.location.href = '/pos';
-        }
-        break;
-      default:
-        console.log('Unknown menu action:', action);
-    }
-  });
+  // Handle menu actions - ensure electronAPI exists
+  if (window.electronAPI && window.electronAPI.onMenuAction) {
+    window.electronAPI.onMenuAction((action) => {
+      switch (action) {
+        case 'new-sale':
+          // Navigate to POS page if we're in the app
+          if (window.location.pathname !== '/pos') {
+            window.location.href = '/pos';
+          }
+          break;
+        default:
+          console.log('Unknown menu action:', action);
+      }
+    });
+  }
 });
 
 // Clean up listeners when page unloads
 window.addEventListener('beforeunload', () => {
-  window.electronAPI.removeMenuActionListener();
+  if (window.electronAPI && window.electronAPI.removeMenuActionListener) {
+    window.electronAPI.removeMenuActionListener();
+  }
 });

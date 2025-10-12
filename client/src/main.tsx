@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
+import { BrowserRouter, HashRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { initDB } from './utils/db'
 import { AuthProvider } from './context/AuthContext'
@@ -23,18 +23,22 @@ const queryClient = new QueryClient({
   },
 });
 
+// Use HashRouter for Electron, BrowserRouter for web
+const isElectron = (window as any).electronAPI !== undefined;
+const Router = isElectron ? HashRouter : BrowserRouter;
+
 createRoot(document.getElementById('root')!).render(
   <ErrorBoundary>
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
+        <Router>
           <AuthProvider>
             <KeyboardProvider>
               <Toaster position='top-right'/>
               <App />
             </KeyboardProvider>
           </AuthProvider>
-        </BrowserRouter>
+        </Router>
       </QueryClientProvider>
     </StrictMode>
   </ErrorBoundary>

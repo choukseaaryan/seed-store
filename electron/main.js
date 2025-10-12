@@ -1,10 +1,48 @@
 const { app, BrowserWindow, Menu, shell } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const config = require('./config');
+const serverManager = require('./server-manager');
 
 let mainWindow;
 
-function createWindow() {
+// Setup logging
+const logPath = path.join(app.getPath('userData'), 'app.log');
+const originalConsoleLog = console.log;
+const originalConsoleError = console.error;
+
+// Override console methods to also write to file
+console.log = (...args) => {
+  const message = `[${new Date().toISOString()}] LOG: ${args.join(' ')}\n`;
+  originalConsoleLog(...args);
+  fs.appendFileSync(logPath, message);
+};
+
+console.error = (...args) => {
+  const message = `[${new Date().toISOString()}] ERROR: ${args.join(' ')}\n`;
+  originalConsoleError(...args);
+  fs.appendFileSync(logPath, message);
+};
+
+console.log(`Logging to: ${logPath}`);
+
+async function createWindow() {
+  console.log(`App starting in ${config.current.nodeEnv} mode`);
+  // Start embedded server first in production
+  if (config.current.useEmbeddedServer) {
+    try {
+      console.log('Starting embedded server...');
+      await serverManager.startServer();
+      console.log('Embedded server started successfully');
+      
+      // Wait a bit more for server to be fully ready
+      await new Promise(resolve => setTimeout(resolve, 3000));
+    } catch (error) {
+      console.error('Failed to start embedded server:', error);
+      // Continue anyway - might work with external server
+    }
+  }
+
   // Create the browser window
   mainWindow = new BrowserWindow(config.windowConfig);
 
@@ -38,16 +76,39 @@ function createWindow() {
     shell.openExternal(url);
     return { action: 'deny' };
   });
+
+  // Prevent navigation to external URLs or file:// URLs
+  mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
+    const parsedUrl = new URL(navigationUrl);
+    
+    // Allow navigation within the app
+    if (parsedUrl.protocol === 'file:' && parsedUrl.pathname.includes(config.current.clientPath.replace("index.html", ""))) {
+      return;
+    }
+    
+    // Allow localhost for API calls
+    if (parsedUrl.protocol === 'http:' && parsedUrl.hostname === 'localhost') {
+      return;
+    }
+    
+    // Prevent all other navigation
+    event.preventDefault();
+    
+    // If it's an external URL, open in default browser
+    if (parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:') {
+      shell.openExternal(navigationUrl);
+    }
+  });
 }
 
 // This method will be called when Electron has finished initialization
-app.whenReady().then(() => {
-  createWindow();
+app.whenReady().then(async () => {
+  await createWindow();
 
   // On macOS, re-create window when dock icon is clicked
-  app.on('activate', () => {
+  app.on('activate', async () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
+      await createWindow();
     }
   });
 
@@ -57,9 +118,17 @@ app.whenReady().then(() => {
 
 // Quit when all windows are closed, except on macOS
 app.on('window-all-closed', () => {
+  // Stop the embedded server
+  serverManager.stopServer();
+  
   if (process.platform !== 'darwin') {
     app.quit();
   }
+});
+
+// Handle app quit
+app.on('before-quit', () => {
+  serverManager.stopServer();
 });
 
 // Security: Prevent new window creation
@@ -129,6 +198,19 @@ function createMenu() {
     {
       label: 'Help',
       submenu: [
+        {
+          label: 'Show Log File',
+          click: () => {
+            shell.showItemInFolder(logPath);
+          }
+        },
+        {
+          label: 'Open Log File',
+          click: () => {
+            shell.openPath(logPath);
+          }
+        },
+        { type: 'separator' },
         {
           label: 'About Seed Store',
           click: () => {

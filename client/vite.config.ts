@@ -8,5 +8,17 @@ export default defineConfig({
   server:{
     host: true,
     port: 3000,
+  },
+  base: './', // Use relative paths for Electron compatibility
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    // Ensure proper file references for Electron
+    rollupOptions: {
+      output: {
+        // Use relative imports
+        format: 'es'
+      }
+    }
   }
 })
