@@ -1,6 +1,6 @@
 {
   "name": "seed-store",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Full-stack inventory management and point-of-sale system with desktop application",
   "private": true,
   "workspaces": [
