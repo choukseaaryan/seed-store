@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { CircularProgress, Box } from '@mui/material';
+import { UpdateProvider } from './context/UpdateContext';
 import AppLayout from './components/layout/AppLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import ProductCategory from './pages/ProductCategory';
@@ -16,7 +17,8 @@ const POS = lazy(() => import('./pages/POS'));
 
 function App() {
   return (
-    <Routes>
+    <UpdateProvider>
+      <Routes>
       <Route path="/login" element={
         <Suspense fallback={
           <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
@@ -98,6 +100,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
+    </UpdateProvider>
   );
 }
 

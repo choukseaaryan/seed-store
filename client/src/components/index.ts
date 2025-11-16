@@ -3,6 +3,7 @@ export { default as AddProductModal } from './AddProductModal';
 export { default as ProtectedRoute } from './ProtectedRoute';
 export { default as CustomerModal } from './CustomerModal';
 export { default as ReceiptModal } from './ReceiptModal';
+export { UpdateNotification } from './UpdateNotification';
 
 // Layout components
 export { default as AppLayout } from './layout/AppLayout';

@@ -253,7 +253,33 @@ npm run dist:desktop  # Create installers
 - **Integrated**: Both frontend and backend run within the desktop app
 - **Native**: Full access to system resources and native APIs
 - **Offline**: Can work offline with local database
-- **Updates**: Built-in update mechanism for seamless upgrades
+- **Auto-Updates**: Built-in automatic update system via GitHub Releases
+- **Secure**: Code-signed releases with integrity verification
+- **User-Friendly**: In-app update notifications and progress tracking
+
+## Releases & Updates
+
+### Automatic Updates
+The desktop application includes an automatic update system:
+
+```bash
+# Prepare a new release
+npm run prepare:release [patch|minor|major]
+
+# Version management
+npm run version:bump patch    # Bump patch version
+npm run version:check         # Check version consistency  
+npm run version:current       # Show current version
+```
+
+### Release Process
+1. Run `npm run prepare:release` to bump version and prepare changelog
+2. Review and commit changes
+3. Create and push a git tag: `git tag v1.0.1 && git push origin v1.0.1`
+4. GitHub Actions automatically builds and publishes the release
+5. Users receive automatic update notifications
+
+For detailed information, see [UPDATE.md](UPDATE.md).
 
 ## Deployment
 

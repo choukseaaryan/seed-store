@@ -34,7 +34,11 @@
     "clean": "npm run clean:client && npm run clean:server && npm run clean:electron",
     "clean:client": "cd client && rm -rf dist node_modules",
     "clean:server": "cd server && rm -rf dist node_modules",
-    "clean:electron": "cd electron && rm -rf dist node_modules"
+    "clean:electron": "cd electron && rm -rf dist node_modules",
+    "version:bump": "node scripts/version-manager.js bump",
+    "version:check": "node scripts/version-manager.js check",
+    "version:current": "node scripts/version-manager.js current",
+    "prepare:release": "node scripts/prepare-release.js"
   },
   "devDependencies": {
     "concurrently": "^9.2.0",

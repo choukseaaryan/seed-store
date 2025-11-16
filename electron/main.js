@@ -1,4 +1,5 @@
 const { app, BrowserWindow, Menu, shell } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
 const config = require('./config');
@@ -25,6 +26,69 @@ console.error = (...args) => {
 };
 
 console.log(`Logging to: ${logPath}`);
+
+// Configure auto-updater
+autoUpdater.logger = {
+  info: console.log,
+  warn: console.log,
+  error: console.error
+};
+
+// Auto-updater event handlers
+autoUpdater.on('checking-for-update', () => {
+  console.log('Checking for update...');
+  if (mainWindow) {
+    mainWindow.webContents.send('update-status', { type: 'checking' });
+  }
+});
+
+autoUpdater.on('update-available', (info) => {
+  console.log('Update available:', info);
+  if (mainWindow) {
+    mainWindow.webContents.send('update-status', { 
+      type: 'available', 
+      version: info.version,
+      releaseNotes: info.releaseNotes 
+    });
+  }
+});
+
+autoUpdater.on('update-not-available', (info) => {
+  console.log('Update not available:', info);
+  if (mainWindow) {
+    mainWindow.webContents.send('update-status', { type: 'not-available' });
+  }
+});
+
+autoUpdater.on('error', (err) => {
+  console.error('Error in auto-updater:', err);
+  if (mainWindow) {
+    mainWindow.webContents.send('update-status', { 
+      type: 'error', 
+      message: err.message 
+    });
+  }
+});
+
+autoUpdater.on('download-progress', (progressObj) => {
+  console.log(`Download progress: ${progressObj.percent}%`);
+  if (mainWindow) {
+    mainWindow.webContents.send('update-status', { 
+      type: 'downloading', 
+      progress: progressObj 
+    });
+  }
+});
+
+autoUpdater.on('update-downloaded', (info) => {
+  console.log('Update downloaded:', info);
+  if (mainWindow) {
+    mainWindow.webContents.send('update-status', { 
+      type: 'downloaded', 
+      version: info.version 
+    });
+  }
+});
 
 async function createWindow() {
   console.log(`App starting in ${config.current.nodeEnv} mode`);
@@ -114,6 +178,17 @@ app.whenReady().then(async () => {
 
   // Create application menu
   createMenu();
+  
+  // Initialize auto-updater (only in production)
+  if (!app.isPackaged) {
+    console.log('Development mode: Skipping auto-updater');
+  } else {
+    console.log('Production mode: Initializing auto-updater');
+    // Check for updates on startup
+    setTimeout(() => {
+      autoUpdater.checkForUpdatesAndNotify();
+    }, 3000); // Wait 3 seconds after startup
+  }
 });
 
 // Quit when all windows are closed, except on macOS
@@ -212,6 +287,21 @@ function createMenu() {
         },
         { type: 'separator' },
         {
+          label: 'Check for Updates',
+          click: () => {
+            if (app.isPackaged) {
+              autoUpdater.checkForUpdatesAndNotify();
+            } else {
+              require('electron').dialog.showMessageBox(mainWindow, {
+                type: 'info',
+                title: 'Updates',
+                message: 'Updates are not available in development mode'
+              });
+            }
+          }
+        },
+        { type: 'separator' },
+        {
           label: 'About Seed Store',
           click: () => {
             // Show about dialog
@@ -219,7 +309,7 @@ function createMenu() {
               type: 'info',
               title: 'About Seed Store',
               message: 'Seed Store - Inventory Management System',
-              detail: 'Version 1.0.0\nA comprehensive inventory and POS system for seed stores.'
+              detail: `Version ${app.getVersion()}\nA comprehensive inventory and POS system for seed stores.`
             });
           }
         }
@@ -258,6 +348,31 @@ ipcMain.handle('get-app-version', () => {
 
 ipcMain.handle('get-app-name', () => {
   return app.getName();
+});
+
+// Handle update-related IPC messages
+ipcMain.handle('check-for-updates', () => {
+  if (!app.isPackaged) {
+    return { error: 'Updates not available in development mode' };
+  }
+  autoUpdater.checkForUpdates();
+  return { success: true };
+});
+
+ipcMain.handle('download-update', () => {
+  if (!app.isPackaged) {
+    return { error: 'Updates not available in development mode' };
+  }
+  autoUpdater.downloadUpdate();
+  return { success: true };
+});
+
+ipcMain.handle('install-update', () => {
+  if (!app.isPackaged) {
+    return { error: 'Updates not available in development mode' };
+  }
+  autoUpdater.quitAndInstall();
+  return { success: true };
 });
 
 // Handle menu actions

@@ -56,3 +56,32 @@ export interface Supplier {
   contactPerson?: string;
   contactNumber: string;
 }
+
+// Update system interfaces
+export interface UpdateInfo {
+  version: string;
+  releaseNotes?: string;
+  downloadedDate?: string;
+}
+
+export interface UpdateProgress {
+  percent: number;
+  bytesPerSecond: number;
+  total: number;
+  transferred: number;
+}
+
+export interface UpdateStatus {
+  type: 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error';
+  version?: string;
+  releaseNotes?: string;
+  progress?: UpdateProgress;
+  message?: string;
+}
+
+export interface UpdateSettings {
+  autoCheck: boolean;
+  autoDownload: boolean;
+  notifyOnUpdate: boolean;
+  checkInterval: number; // in hours
+}
