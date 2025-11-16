@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { Button, TextField, CircularProgress, Box, Typography } from '@mui/material';
-import { FocusableElement } from '../components/FocusableElement';
 
 interface LocationState {
   from?: {
@@ -60,29 +59,25 @@ export default function Login() {
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm space-y-4 p-4">
-            <FocusableElement>
-              <TextField
-                type="email"
-                label="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                fullWidth
-                variant="outlined"
-                autoFocus
-              />
-            </FocusableElement>
-            <FocusableElement>
-              <TextField
-                type="password"
-                label="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                fullWidth
-                variant="outlined"
-              />
-            </FocusableElement>
+            <TextField
+              type="email"
+              label="Email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              fullWidth
+              variant="outlined"
+              autoFocus
+            />
+            <TextField
+              type="password"
+              label="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              fullWidth
+              variant="outlined"
+            />
           </div>
 
           {error && (
@@ -90,17 +85,15 @@ export default function Login() {
           )}
 
           <div>
-            <FocusableElement>
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
-                variant="contained"
-                fullWidth
-              >
-                {isLoading ? <CircularProgress size={20} /> : 'Sign in'}
-              </Button>
-            </FocusableElement>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading}
+              variant="contained"
+              fullWidth
+            >
+              {isLoading ? <CircularProgress size={20} /> : 'Sign in'}
+            </Button>
           </div>
         </form>
       </div>

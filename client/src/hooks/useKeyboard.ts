@@ -1,10 +1,5 @@
-import { useContext } from "react";
-import { KeyboardContext } from "../context/KeyboardContext";
+// Legacy keyboard context hook has been removed.
+// All keyboard mode features are gone; only global navigation
+// hotkeys (Ctrl/Cmd+1–6) remain via useNavigationHotkeys.
 
-export const useKeyboard = () => {
-  const context = useContext(KeyboardContext);
-  if (!context) {
-    throw new Error('useKeyboard must be used within a KeyboardProvider');
-  }
-  return context;
-};
+export {};

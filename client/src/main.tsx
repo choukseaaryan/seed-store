@@ -4,7 +4,7 @@ import { BrowserRouter, HashRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { initDB } from './utils/db'
 import { AuthProvider } from './context/AuthContext'
-import { KeyboardProvider } from './context/KeyboardContext'
+import { useNavigationHotkeys } from './hooks/useNavigationHotkeys'
 import './index.css'
 import App from './App.tsx'
 import { ErrorBoundary } from './components/ErrorBoundary.tsx'
@@ -27,17 +27,24 @@ const queryClient = new QueryClient({
 const isElectron = (window as any).electronAPI !== undefined;
 const Router = isElectron ? HashRouter : BrowserRouter;
 
+function RootApp() {
+  // Register global navigation hotkeys at the top level.
+  useNavigationHotkeys();
+
+  return (
+    <AuthProvider>
+      <Toaster position='top-right'/>
+      <App />
+    </AuthProvider>
+  );
+}
+
 createRoot(document.getElementById('root')!).render(
   <ErrorBoundary>
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <Router>
-          <AuthProvider>
-            <KeyboardProvider>
-              <Toaster position='top-right'/>
-              <App />
-            </KeyboardProvider>
-          </AuthProvider>
+          <RootApp />
         </Router>
       </QueryClientProvider>
     </StrictMode>
